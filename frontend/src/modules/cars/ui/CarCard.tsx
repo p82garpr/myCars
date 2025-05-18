@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 // Usar ruta relativa si el alias @/ no funciona consistentemente en tu entorno
 import { Car } from "../domain/Car"; // Importa la entidad Car
 import { formatPrice, translateStatus, getStatusColor } from '../utils/carUtils';
@@ -10,6 +11,8 @@ type CarCardProps = {
 };
 
 export function CarCard({ car }: CarCardProps) {
+  const router = useRouter();
+
   // Asegurarse de que 'car', 'car.model', y 'car.model.brand' existen antes de acceder a las propiedades
   if (!car || !car.model || !car.model.brand) {
     console.error("Invalid car data received by CarCard:", car);
@@ -21,6 +24,10 @@ export function CarCard({ car }: CarCardProps) {
   }
 
   const mainPhoto = car.photos?.find(photo => photo.isMain);
+
+  const handleViewDetails = () => {
+    router.push(`/cars/${car.id}`);
+  };
 
   return (
     <div className="group relative bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-2xl border border-neutral-200/50 hover:border-primary-200">
@@ -103,7 +110,9 @@ export function CarCard({ car }: CarCardProps) {
                   : 'Precio no disponible'}
               </p>
             </div>
-            <button className="flex items-center space-x-2 bg-neutral-900 text-white px-4 py-2 rounded-lg 
+            <button 
+              onClick={handleViewDetails}
+              className="flex items-center space-x-2 bg-neutral-900 text-white px-4 py-2 rounded-lg 
                            hover:bg-primary-600 transition-colors duration-300
                            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
               <span>Ver Detalles</span>

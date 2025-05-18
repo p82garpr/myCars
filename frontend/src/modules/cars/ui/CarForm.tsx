@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react';
 import { Car, Brand, Model } from '../domain/Car';
 import { validateSpanishLicensePlate } from '../utils/carUtils';
+import { CarPhotoUploader } from '@/shared/components/CarPhotoUploader';
 
 interface CarFormProps {
-  onSubmit: (carData: Car) => void;
+  onSubmit: (car: Car, photos: { files: File[], mainPhotoIndex: number }) => Promise<void>;
+  initialData?: Car;
+  onClose?: () => void;
 }
 
 const currentYear = new Date().getFullYear();
@@ -16,7 +19,7 @@ const statusOptions = [
   { value: 'MAINTENANCE' as const, label: 'En Mantenimiento' }
 ];
 
-export function CarForm({ onSubmit }: CarFormProps) {
+export function CarForm({ onSubmit, initialData, onClose }: CarFormProps) {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [selectedBrand, setSelectedBrand] = useState<string>('');
@@ -26,13 +29,16 @@ export function CarForm({ onSubmit }: CarFormProps) {
   const [isNewBrand, setIsNewBrand] = useState<boolean>(false);
   const [isNewModel, setIsNewModel] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState<{ files: File[], mainPhotoIndex: number }>({ files: [], mainPhotoIndex: -1 });
   const [formData, setFormData] = useState({
     licensePlate: '',
     color: '',
     expeditionYear: currentYear,
     mileage: 0,
     sellingPrice: 0,
-    status: 'AVAILABLE' as const
+    status: 'AVAILABLE' as const,
+    description: ''
   });
 
   useEffect(() => {
@@ -108,7 +114,7 @@ export function CarForm({ onSubmit }: CarFormProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     let parsedValue: string | number = value;
 
@@ -131,6 +137,10 @@ export function CarForm({ onSubmit }: CarFormProps) {
     }
   };
 
+  const handlePhotosSelected = (files: File[], mainPhotoIndex: number) => {
+    setSelectedPhotos({ files, mainPhotoIndex });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -139,6 +149,7 @@ export function CarForm({ onSubmit }: CarFormProps) {
     }
 
     try {
+      setLoading(true);
       let brandId: number;
       let modelId: number;
 
@@ -148,6 +159,7 @@ export function CarForm({ onSubmit }: CarFormProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: newBrand })
         });
+        if (!brandResponse.ok) throw new Error('Error al crear la marca');
         const brandData = await brandResponse.json();
         brandId = brandData.id;
       } else {
@@ -163,6 +175,7 @@ export function CarForm({ onSubmit }: CarFormProps) {
             brand: { id: brandId }
           })
         });
+        if (!modelResponse.ok) throw new Error('Error al crear el modelo');
         const modelData = await modelResponse.json();
         modelId = modelData.id;
       } else {
@@ -171,7 +184,6 @@ export function CarForm({ onSubmit }: CarFormProps) {
 
       const carData: Car = {
         ...formData,
-        id: '',
         model: {
           id: modelId,
           name: isNewModel ? newModel : models.find(m => m.id === modelId)?.name || '',
@@ -179,17 +191,19 @@ export function CarForm({ onSubmit }: CarFormProps) {
             id: brandId,
             name: isNewBrand ? newBrand : brands.find(b => b.id === brandId)?.name || ''
           }
-        },
-        createdOn: new Date().toISOString()
+        }
       };
 
-      onSubmit(carData);
+      await onSubmit(carData, selectedPhotos);
+      if (onClose) onClose();
     } catch (error) {
       console.error('Error creating car:', error);
       setErrors(prev => ({
         ...prev,
         submit: 'Error al crear el vehículo. Por favor, inténtalo de nuevo.'
       }));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -388,6 +402,26 @@ export function CarForm({ onSubmit }: CarFormProps) {
             </select>
           </div>
         </div>
+
+        {/* Descripción */}
+        <div>
+          <label className={labelClassName}>
+            Descripción
+          </label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            rows={3}
+            className={inputClassName}
+            placeholder="Describe el vehículo en detalle..."
+          />
+        </div>
+
+        {/* Fotos */}
+        <div>
+          <CarPhotoUploader onPhotosSelected={handlePhotosSelected} />
+        </div>
       </div>
 
       {errors.submit && (
@@ -397,18 +431,31 @@ export function CarForm({ onSubmit }: CarFormProps) {
       )}
 
       <div className="flex justify-end space-x-4">
-        <button
-          type="button"
-          onClick={() => window.history.back()}
-          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          Cancelar
-        </button>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Cancelar
+          </button>
+        )}
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          disabled={loading}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center"
         >
-          Guardar Vehículo
+          {loading ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Guardando...</span>
+            </>
+          ) : (
+            'Guardar Vehículo'
+          )}
         </button>
       </div>
     </form>

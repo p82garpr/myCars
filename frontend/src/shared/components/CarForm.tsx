@@ -32,7 +32,8 @@ export const CarForm: React.FC<CarFormProps> = ({ onSubmit, initialData, onClose
     expeditionYear: currentYear,
     mileage: 0,
     sellingPrice: 0,
-    status: 'AVAILABLE'
+    status: 'AVAILABLE',
+    description: ''
   });
   const [isVisible, setIsVisible] = useState(false);
 
@@ -394,7 +395,9 @@ export const CarForm: React.FC<CarFormProps> = ({ onSubmit, initialData, onClose
                 Descripción
               </label>
               <textarea
-                {...register('description')}
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
                 rows={3}
                 className="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
                 placeholder="Describe el vehículo en detalle..."
