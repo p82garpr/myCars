@@ -1,0 +1,45 @@
+---
+description: Para tareas del frontend al construir la aplicación web
+globs: 
+alwaysApply: false
+---
+El codigo ha de ser lo más mantenible posible, y para ello deberás seguir buenas prácticas desarrollando con arquitectura DDD + Hexagonal, siguiendo una estructura parecida a la siguiente:
+
+/src
+│
+├── app/                   # Configuración de Next.js y rutas
+│   ├── layout.tsx
+│   └── page.tsx
+│
+├── modules/               # Módulos del dominio (como Bounded Contexts)
+│   └── cars/              # Módulo para gestión de coches
+│       ├── application/   # Casos de uso
+│       │   ├── createCar.ts
+│       │   ├── updateCar.ts
+│       │   └── deleteCar.ts
+│       │
+│       ├── domain/        # Entidades y lógica del dominio
+│       │   ├── Car.ts
+│       │   └── CarRepository.ts
+│       │
+│       ├── infrastructure/ # Adaptadores concretos (ej. llamadas API, persistencia, etc.)
+│       │   └── CarApiRepository.ts
+│       │
+│       ├── ui/            # Componentes de UI para este módulo
+│       │   ├── CarForm.tsx
+│       │   ├── CarList.tsx
+│       │   └── CarDetails.tsx
+│       │
+│       └── types/         # Tipos y DTOs (Data Transfer Objects)
+│           └── CarDTO.ts
+│
+├── shared/                # Código compartido entre módulos
+│   ├── components/
+│   ├── utils/
+│   └── services/
+│
+├── styles/
+│
+└── lib/                   # Configuración de libs, API clients, etc.
+
+
