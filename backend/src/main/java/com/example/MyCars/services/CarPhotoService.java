@@ -19,7 +19,7 @@ import com.example.MyCars.repositories.CarPhotoRepository;
 @Service
 public class CarPhotoService {
 
-    @Value("${app.upload.dir:uploads/cars}")
+    @Value("${app.upload.dir}")
     private String uploadDir;
 
     @Autowired
@@ -35,7 +35,7 @@ public class CarPhotoService {
 
     public CarPhotoModel savePhoto(MultipartFile file, CarModel car, String caption, Boolean isMain) throws IOException {
         // Crear directorio si no existe
-        Path uploadPath = Paths.get(uploadDir);
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
@@ -58,8 +58,10 @@ public class CarPhotoService {
         if (isMain) {
             List<CarPhotoModel> existingPhotos = getPhotosByCar(car);
             existingPhotos.forEach(p -> {
-                p.setIsMain(false);
-                carPhotoRepository.save(p);
+                if (!p.getId().equals(photo.getId())) {
+                    p.setIsMain(false);
+                    carPhotoRepository.save(p);
+                }
             });
         }
 
