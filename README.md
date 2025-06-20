@@ -107,7 +107,7 @@ MyCars/
 └── README.md              # Este archivo
 ```
 
-## 🔐 Seguridad
+## 🔐 Seguridad (Coming soon)
 
 - Autenticación basada en JWT
 - Roles de usuario (Admin, Staff, Cliente)
@@ -136,14 +136,5 @@ MyCars/
 Este proyecto está bajo la licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
 
 ## 📞 Contacto
-
-- Nombre - [@tuTwitter](https://twitter.com/tuTwitter)
-- Email - tu@email.com
-- Link del Proyecto: [https://github.com/tuUsuario/MyCars](https://github.com/tuUsuario/MyCars)
-
-## 🙏 Agradecimientos
-
-- [Spring Boot](https://spring.io/projects/spring-boot)
-- [Next.js](https://nextjs.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [PostgreSQL](https://www.postgresql.org/) 
+- Email - p82garpr@uco.es
+- Link del Proyecto: [https://github.com/p82garpr/myCars](https://github.com/p82garpr/myCars)
